@@ -1,0 +1,35 @@
+version: "3.7"
+
+networks:
+  thenetwork:
+    driver: bridge
+    ipam:
+      driver: default
+
+services:
+  # https://hub.docker.com/_/rabbitmq/
+  bothelp_rabbitmq:
+    image: bravik/bothelp_rabbit
+    build:
+      context: .
+      dockerfile: docker/rabbitmq.dockerfile
+    restart: on-failure
+    networks:
+      - thenetwork
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  bothelp_worker:
+    image: bravik/bothelp_worker
+    command: bash -c 'sleep 10; php listen.php'
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/worker.dockerfile
+    volumes:
+      - .:/app
+    networks:
+      - thenetwork
+    depends_on:
+      - bothelp_rabbitmq
